@@ -1,0 +1,20 @@
+[package]
+name = "kitdoom"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-2.0-or-later"
+description = "Play ZOOM inside your terminal"
+repository = "https://github.com/wensheng/kitdoom"
+readme = "README.md"
+keywords = ["cli", "game", "terminal", "console"]
+categories = ["command-line-utilities"]
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.22"
+clap = { version = "4.6", features = ["derive"] }
+crossterm = "0.29"
+flate2 = "1.1"
+
+[build-dependencies]
+cc = "1.2"
