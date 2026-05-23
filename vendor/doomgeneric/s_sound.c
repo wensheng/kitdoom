@@ -572,10 +572,10 @@ void S_ChangeMusic(int musicnum, int looping)
     }
 
     S_StopMusic();
+    M_snprintf(namebuf, sizeof(namebuf), "d_%s", DEH_String(music->name));
     if (!music->lumpnum)
     {
-        M_snprintf(namebuf, sizeof(namebuf), "d_%s", DEH_String(music->name));
-        music->lumpnum = W_GetNumForName(namebuf);
+        music->lumpnum = W_CheckNumForName(namebuf);
     }
 
     music->handle = I_RegisterSong(namebuf,0);//music->data, W_LumpLength(music->lumpnum));
@@ -592,4 +592,3 @@ void S_StopMusic(void)
 {
     I_StopSong();
 }
-

@@ -108,7 +108,7 @@ static int I_MINI_AUDIO_GetSfxLumpNum(sfxinfo_t *sfx)
 {
     char namebuf[9];
     GetSfxLumpName(sfx, namebuf, sizeof(namebuf));
-    return W_GetNumForName(namebuf);
+    return W_CheckNumForName(namebuf);
 }
 
 static boolean I_MINI_AUDIO_SoundIsPlaying(int handle)
