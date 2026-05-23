@@ -4,7 +4,11 @@
 
 **Play Doom, with real graphics and sound, directly inside your terminal.**
 
-
+(kitDOOM runs on terminals that supports the Kitty graphics protocol:
+[**Ghostty**](https://ghostty.org/),
+[**Kitty**](https://sw.kovidgoyal.net/kitty/),
+[**WezTerm**](https://wezterm.net/),
+[**cmux**](https://github.com/manaflow-ai/cmux))
 
 ## Install
 
