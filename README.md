@@ -1,4 +1,4 @@
-# kitdoom
+# kitDOOM
 
 <img src="imgs/doom.png" width="300">
 
