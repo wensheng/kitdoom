@@ -1,6 +1,6 @@
 [package]
 name = "kitdoom"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 license = "GPL-2.0-or-later"
 description = "Play ZOOM inside your terminal"
@@ -15,6 +15,7 @@ base64 = "0.22"
 clap = { version = "4.6", features = ["derive"] }
 crossterm = "0.29"
 flate2 = "1.1"
+signal-hook = "0.3"
 
 [build-dependencies]
 cc = "1.2"

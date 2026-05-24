@@ -22,6 +22,9 @@ fn main() -> Result<()> {
         std::env::set_var("KITDOOM_SOUND_DIR", &sound_dir);
     }
 
+    runtime::reset_exit_request();
+    runtime::install_signal_handlers()?;
+
     let _terminal = terminal::TerminalSession::enter()?;
     runtime::run(&mut c_args)
 }

@@ -11,12 +11,18 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use crossterm::{
     cursor::MoveTo,
-    event::{self, Event, KeyCode, KeyEventKind, KeyModifiers, MouseButton, MouseEventKind},
+    event::{
+        self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseButton, MouseEventKind,
+    },
     queue,
     terminal::{Clear, ClearType},
+};
+use signal_hook::{
+    consts::signal::{SIGINT, SIGTERM},
+    iterator::Signals,
 };
 
 use crate::{
@@ -33,6 +39,7 @@ const KEY_QUEUE_LEN: usize = 32;
 
 static STATE: OnceLock<Mutex<RuntimeState>> = OnceLock::new();
 static EXIT_FLAG: AtomicBool = AtomicBool::new(false);
+static SIGNAL_HANDLERS_INSTALLED: AtomicBool = AtomicBool::new(false);
 
 #[repr(C)]
 #[allow(dead_code)]
@@ -108,8 +115,41 @@ impl RuntimeState {
     }
 }
 
-pub fn run(c_args: &mut [CString]) -> Result<()> {
+pub fn reset_exit_request() {
     EXIT_FLAG.store(false, Ordering::SeqCst);
+}
+
+pub fn request_exit() {
+    EXIT_FLAG.store(true, Ordering::SeqCst);
+}
+
+pub fn install_signal_handlers() -> Result<()> {
+    if SIGNAL_HANDLERS_INSTALLED
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {
+        return Ok(());
+    }
+
+    let mut signals =
+        Signals::new([SIGINT, SIGTERM]).context("failed to install signal handlers")?;
+
+    if let Err(error) = thread::Builder::new()
+        .name("kitdoom-signals".to_string())
+        .spawn(move || {
+            for _ in signals.forever() {
+                request_exit();
+            }
+        })
+    {
+        SIGNAL_HANDLERS_INSTALLED.store(false, Ordering::SeqCst);
+        return Err(error).context("failed to spawn signal handler thread");
+    }
+
+    Ok(())
+}
+
+pub fn run(c_args: &mut [CString]) -> Result<()> {
     if STATE.set(Mutex::new(RuntimeState::new())).is_err() {
         bail!("Doom runtime has already been initialized");
     }
@@ -139,7 +179,7 @@ pub extern "C" fn DG_Init() {}
 pub extern "C" fn DG_DrawFrame() {
     if let Err(error) = draw_frame() {
         let _ = writeln!(io::stderr(), "render error: {error}");
-        EXIT_FLAG.store(true, Ordering::SeqCst);
+        request_exit();
     }
 }
 
@@ -248,14 +288,14 @@ fn drain_terminal_events(state: &mut RuntimeState) {
     }
 }
 
-fn handle_key_event(state: &mut RuntimeState, key: crossterm::event::KeyEvent) {
+fn handle_key_event(state: &mut RuntimeState, key: KeyEvent) {
     let pressed = match key.kind {
         KeyEventKind::Press | KeyEventKind::Repeat => true,
         KeyEventKind::Release => false,
     };
 
-    if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) && pressed {
-        EXIT_FLAG.store(true, Ordering::SeqCst);
+    if is_interrupt_key(&key) {
+        request_exit();
         return;
     }
 
@@ -278,6 +318,15 @@ fn handle_key_event(state: &mut RuntimeState, key: crossterm::event::KeyEvent) {
     if let Some(doom_key) = input::doom_key_for(key) {
         state.enqueue_key(pressed, doom_key);
     }
+}
+
+fn is_interrupt_key(key: &KeyEvent) -> bool {
+    let pressed = matches!(key.kind, KeyEventKind::Press | KeyEventKind::Repeat);
+    let ctrl_c = matches!(key.code, KeyCode::Char('c' | 'C'))
+        && key.modifiers.contains(KeyModifiers::CONTROL);
+    let raw_etx = matches!(key.code, KeyCode::Char('\u{3}'));
+
+    pressed && (ctrl_c || raw_etx)
 }
 
 fn handle_mouse_event(state: &mut RuntimeState, mouse: crossterm::event::MouseEvent) {
@@ -370,5 +419,33 @@ mod tests {
         convert_doom_pixels(&input, &mut output);
 
         assert_eq!(output, [0x12, 0x34, 0x56, 0xab, 0xcd, 0xef]);
+    }
+
+    #[test]
+    fn detects_control_c_interrupt() {
+        assert!(is_interrupt_key(&KeyEvent::new(
+            KeyCode::Char('c'),
+            KeyModifiers::CONTROL,
+        )));
+        assert!(is_interrupt_key(&KeyEvent::new(
+            KeyCode::Char('C'),
+            KeyModifiers::CONTROL,
+        )));
+    }
+
+    #[test]
+    fn detects_raw_etx_interrupt() {
+        assert!(is_interrupt_key(&KeyEvent::new(
+            KeyCode::Char('\u{3}'),
+            KeyModifiers::NONE,
+        )));
+    }
+
+    #[test]
+    fn ignores_plain_c() {
+        assert!(!is_interrupt_key(&KeyEvent::new(
+            KeyCode::Char('c'),
+            KeyModifiers::NONE,
+        )));
     }
 }
