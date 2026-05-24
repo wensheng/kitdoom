@@ -4,7 +4,7 @@
 
 **Play Doom, with real graphics and sound, directly inside your terminal.**
 
-***kitdoom runs on terminals that supports the Kitty graphics protocol:
+***kitDOOM runs on terminals that supports the Kitty graphics protocol:
 [**Ghostty**](https://ghostty.org/),
 [**Kitty**](https://sw.kovidgoyal.net/kitty/),
 [**WezTerm**](https://wezterm.net/),
@@ -12,8 +12,6 @@
 [**warp**](https://warp.dev/)***
 
 **Note:** Only "Knee Deep in the Dead" WAD is included in the binary. You can provide your own WAD the `-iwad` flag (see Notes below).
-
-
 
 ## Install
 
