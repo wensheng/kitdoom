@@ -8,8 +8,7 @@
 [**Ghostty**](https://ghostty.org/),
 [**Kitty**](https://sw.kovidgoyal.net/kitty/),
 [**WezTerm**](https://wezterm.net/),
-[**cmux**](https://github.com/manaflow-ai/cmux),
-[**warp**](https://warp.dev/)***
+[**cmux**](https://github.com/manaflow-ai/cmux)***
 
 **Note:** Only "Knee Deep in the Dead" WAD is included in the binary. You can provide your own WAD the `-iwad` flag (see Notes below).
 
