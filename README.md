@@ -19,6 +19,8 @@
 
 **Note:** Only "Knee Deep in the Dead" WAD is included in the binary. You can provide your own WAD the `-iwad` flag (see Notes below).
 
+[![demo]](https://github.com/user-attachments/assets/ed807825-2e17-486a-93b0-ac9484070908)
+
 ## Install
 
     cargo install kitdoom
